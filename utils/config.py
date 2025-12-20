@@ -1,0 +1,5 @@
+PIN_LEFT = 17
+PIN_BELLY = 18
+
+TAIL_PINS = [26, 20, 21]
+MOUTH_PINS = [5, 6, 12]
