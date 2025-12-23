@@ -12,25 +12,33 @@ def speak(text: str, mouth_leds):
     with tempfile.NamedTemporaryFile(suffix=".wav") as raw, \
          tempfile.NamedTemporaryFile(suffix=".wav") as fx:
 
-        # 1️⃣ Podstawowy TTS (PL)
-        subprocess.run([
-            "espeak-ng",
-            "-v", "pl",
-            "-s", "145",     # szybciej = bardziej żywy
-            "-p", "70",      # wyższy pitch
-            "-a", "180",     # głośniej
-            "-w", raw.name,
-            text
-        ], check=True)
+        # 1️⃣ Podstawowy TTS (PL) — NORMALNY poziom głośności
+        subprocess.run(
+            [
+                "espeak-ng",
+                "-v", "pl",
+                "-s", "200",     # żywy
+                "-p", "150",     # wyższy pitch
+                "-a", "50",      # głośniej
+                "-w", raw.name,
+                text
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
 
-        # 2️⃣ Charmander FX 🔥 (lekko, bez przesady)
-        subprocess.run([
-            "sox", raw.name, fx.name,
-            "pitch", "220",        # wyższy, młodszy głos
-            "overdrive", "4",      # delikatna chropowatość
-            "treble", "5",         # jaśniej
-            "tempo", "1.05"        # żwawszy
-        ], check=True)
+        # 2️⃣ Charmander FX 🔥 (bez przesteru)
+        subprocess.run(
+            [
+                "sox", raw.name, fx.name,
+                "pitch", "400",       # wyższy, młodszy głos
+                "overdrive", "1.5",   # delikatna chropowatość 
+                "treble", "2",        # jaśniej
+                "tempo", "1.10"       # żwawszy
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
 
         # 3️⃣ Envelope do pyska
         with wave.open(fx.name, "rb") as wf:
@@ -52,7 +60,11 @@ def speak(text: str, mouth_leds):
         if mouth_leds:
             mouth_leds.start(env)
 
-        subprocess.run(["aplay", fx.name], check=True)
+        subprocess.run(
+            ["aplay", fx.name],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
 
         if mouth_leds:
             mouth_leds.stop()
