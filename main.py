@@ -13,10 +13,6 @@ from utils.config import *
 from utils.log import sys, stt, gpt
 
 
-# =========================
-# GLOBAL STATE
-# =========================
-
 state = State()
 mode = "Normalny"
 
@@ -25,18 +21,12 @@ mouth = None
 stt_engine = None
 
 
-# =========================
-# CALLBACKS
-# =========================
-
 def on_voice_level(level):
     if state.listening and not state.paused:
         tail.set_level(level)
 
 
 def on_text(text):
-    global state
-
     stt(text)
     state.last_interaction = datetime.now()
 
@@ -54,8 +44,6 @@ def on_text(text):
 
 
 def toggle_listening():
-    global state
-
     state.listening = stt_engine.toggle()
     msg = "Czar… słucham." if state.listening else "Dobra… idę spać."
     sys(msg)
@@ -67,7 +55,7 @@ def toggle_listening():
 
 
 def belly_press():
-    global mode, state
+    global mode
 
     modes = ["Normalny", "Laleczka Czaki", "Ziomek"]
     mode = modes[(modes.index(mode) + 1) % len(modes)]
@@ -81,44 +69,30 @@ def belly_press():
     state.paused = False
 
 
-# =========================
-# MAIN
-# =========================
-
 def main():
     global tail, mouth, stt_engine
 
     sys("Charmander AI startuje 🔥")
 
-    import subprocess
-
-    subprocess.run(
-        ["alsactl", "init"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
-
-    # LED
     tail = TailLeds(TAIL_PINS)
     mouth = MouthLeds(MOUTH_PINS)
 
-    # STT
-    stt_engine = StreamingSTT(
-        on_text=on_text,
-        on_level=on_voice_level
-    )
+    stt_engine = StreamingSTT(on_text=on_text, on_level=on_voice_level)
     stt_engine.start()
 
-    # BUTTONS
     btn_left = ButtonController(PIN_LEFT)
     btn_belly = ButtonController(PIN_BELLY)
 
     btn_left.on_press = toggle_listening
     btn_belly.on_press = belly_press
 
-    # LOOP
-    while True:
-        time.sleep(0.1)
+    try:
+        while True:
+            time.sleep(0.1)
+    finally:
+        # 🔥 HARD GPIO CLEANUP
+        tail.off()
+        mouth.off()
 
 
 if __name__ == "__main__":
